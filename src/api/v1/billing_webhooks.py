@@ -6,7 +6,7 @@ from api.schema import ErrorCode, ErrorModel
 from models.billing import PaymentStatus
 
 router = APIRouter()
-router.prefix = "/webhooks/billing"
+router.prefix = "/internal/hooks/billing"
 
 
 @router.post(
