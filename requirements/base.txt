@@ -1,1 +1,6 @@
-psycopg2==2.9.7
+# psycopg2==2.9.7
+pydantic==2.3.0
+pydantic-settings==2.0.3
+fastapi==0.103.1
+orjson==3.9.5
+uvicorn==0.23.2
