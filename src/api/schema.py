@@ -99,12 +99,12 @@ class TariffUpdate(BaseModel):
 # region Payments
 
 
-class PaymentCreate(BaseModel):
+class InvoiceCreate(BaseModel):
     account_id: UUID
     tarriff_id: UUID
 
 
-class PaymentRead(BaseModel):
+class InvoiceRead(BaseModel):
     invoice_id: UUID
     account_id: UUID
     amount: decimal.Decimal

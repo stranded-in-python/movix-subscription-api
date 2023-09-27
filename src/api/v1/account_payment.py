@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter
 
 import api.schema as schema
 
@@ -9,18 +9,27 @@ router.prefix = "/accounts"
 
 
 @router.get(
-    "/{account_id}/payment",
-    summary="Get subscription account payment",
-    description="Get subscription account payment by id",
+    "/{account_id}/invoice",
+    summary="Get subscription account invoice",
+    description="Get subscription account invoice by id",
 )
-async def get_account_payment(account_id: UUID) -> schema.PaymentRead:
+async def get_account_invoice(account_id: UUID) -> schema.InvoiceRead:
     pass
 
 
 @router.post(
-    "/{account_id}/payment",
-    summary="Get subscription account payment",
-    description="Get subscription account payment by id",
+    "/invoice",
+    summary="Create invoice subscription account",
+    description="Create subscription account invoice by id",
 )
-async def get_account_payment(account_id: UUID) -> schema.PaymentRead:
+async def create_invoice(invoice: schema.InvoiceCreate) -> schema.InvoiceRead:
+    pass
+
+
+@router.post(
+    "/{account_id}/refund/{invoice_id}",
+    summary="Create refund account payment",
+    description="Create subscription account payment by id",
+)
+async def create_refund(account_id: UUID, invoice_id: UUID) -> schema.InvoiceRead:
     pass
