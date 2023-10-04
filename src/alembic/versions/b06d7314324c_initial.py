@@ -24,7 +24,7 @@ def upgrade() -> None:
     op.create_table(
         'subscription',
         sa.Column('id', sa.UUID(), nullable=False),
-        sa.Column('currency', sa.String(length=255), nullable=False),
+        sa.Column('name', sa.String(length=255), nullable=False),
         sa.PrimaryKeyConstraint('id'),
         schema='subscriptions',
     )
@@ -56,7 +56,7 @@ def upgrade() -> None:
         sa.Column('account', sa.UUID(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('expires_at', sa.DateTime(), nullable=True),
-        sa.Column('currency', sa.String(length=255), nullable=True),
+        sa.Column('status', sa.String(length=255), nullable=True),
         sa.ForeignKeyConstraint(['account'], ['subscriptions.account.id']),
         sa.PrimaryKeyConstraint('id'),
         schema='subscriptions',
