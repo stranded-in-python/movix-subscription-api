@@ -13,7 +13,7 @@ class SQLAlchemyBase(DeclarativeBase):
 
 class SubscriptionDB(SQLAlchemyBase):
     id = mapped_column("id", UUID(as_uuid=True), primary_key=True, default=uuid4)
-    name = mapped_column("currency", String(255), nullable=False)
+    name = mapped_column("name", String(255), nullable=False)
 
     __tablename__ = "subscription"
 
@@ -45,6 +45,6 @@ class AccountStatusDB(SQLAlchemyBase):
     )  # uuid REFERENCES subscriptions.account(id),
     created_at = mapped_column("created_at", DateTime)
     expires_at = mapped_column("expires_at", DateTime)
-    status = mapped_column("currency", String(255))
+    status = mapped_column("status", String(255))
 
     __tablename__ = "account_status"
