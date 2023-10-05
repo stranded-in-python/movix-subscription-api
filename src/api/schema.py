@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from models.billing import Currency, PaymentStatus
+from models import Currency, PaymentStatus
 
 # region Subscriptions
 

@@ -1,32 +1,39 @@
 from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 import api.schema as schema
+from managers.tariff import TariffManager, get_tariff_manager
 
 router = APIRouter()
-router.prefix = "/tariff"
+router.prefix = "/tariffs"
 
 
 @router.get(
-    "/subscription/{subscription_id}",
+    "/subscription",
     summary="Get tariff by subscription and date",
     description="Get tariff by subscription id and date",
 )
 async def get_tariff_by_subscription(
-    tariff_id: UUID, date: datetime
+    subscription_id: UUID,
+    date: datetime,
+    tariff_manager: TariffManager = Depends(get_tariff_manager),
 ) -> schema.TariffRead:
-    pass
+    model = await tariff_manager.get_by_subscription(subscription_id)
+    return schema.TariffRead.model_validate(model)
 
 
-@router.get("/{tariff_id}", summary="Get tariff", description="Get tariff by id")
-async def get_tariff(tariff_id: UUID) -> schema.TariffRead:
-    pass
+@router.get("", summary="Get tariff", description="Get tariff by id")
+async def get_tariff(
+    tariff_id: UUID, tariff_manager: TariffManager = Depends(get_tariff_manager)
+) -> schema.TariffRead:
+    model = await tariff_manager.get(tariff_id)
+    return schema.TariffRead.model_validate(model)
 
 
 @router.post(
-    "/",
+    "",
     summary="Create tariff",
     responses={
         status.HTTP_401_UNAUTHORIZED: {
@@ -35,12 +42,17 @@ async def get_tariff(tariff_id: UUID) -> schema.TariffRead:
         status.HTTP_403_FORBIDDEN: {"description": "Not a superuser."},
     },
 )
-async def create_tariff(subscription: schema.TariffCreate) -> schema.TariffRead:
-    pass
+async def create_tariff(
+    request: Request,
+    tariff_create: schema.TariffCreate,
+    tariff_manager: TariffManager = Depends(get_tariff_manager),
+) -> schema.TariffRead:
+    model = await tariff_manager.create(tariff_create.model_dump(), request=request)
+    return schema.TariffRead.model_validate(model)
 
 
-@router.patch(
-    "/",
+@router.put(
+    "",
     summary="Update tariff",
     responses={
         status.HTTP_401_UNAUTHORIZED: {
@@ -50,12 +62,22 @@ async def create_tariff(subscription: schema.TariffCreate) -> schema.TariffRead:
         status.HTTP_404_NOT_FOUND: {"description": "The tariff does not exist."},
     },
 )
-async def update_tariff(subscription: schema.TariffUpdate) -> schema.TariffRead:
-    pass
+async def update_tariff(
+    request: Request,
+    tariff_update: schema.TariffUpdate,
+    tariff_manager: TariffManager = Depends(get_tariff_manager),
+) -> schema.TariffRead:
+    model = await tariff_manager.get(tariff_update.id)
+
+    model = await tariff_manager.update(
+        tariff_update.model_dump(), model, request=request
+    )
+
+    return schema.TariffRead.model_validate(model)
 
 
 @router.delete(
-    "/{tariff_id}",
+    "",
     summary="Delete tariff",
     responses={
         status.HTTP_401_UNAUTHORIZED: {
@@ -65,5 +87,13 @@ async def update_tariff(subscription: schema.TariffUpdate) -> schema.TariffRead:
         status.HTTP_404_NOT_FOUND: {"description": "The tariff does not exist."},
     },
 )
-async def delete_tariff(tariff_id: UUID) -> schema.TariffRead:
-    pass
+async def delete_tariff(
+    request: Request,
+    tariff_id: UUID,
+    tariff_manager: TariffManager = Depends(get_tariff_manager),
+) -> schema.TariffRead:
+    model = await tariff_manager.get(tariff_id)
+
+    model = await tariff_manager.delete(model, request=request)
+
+    return schema.TariffRead.model_validate(model)
