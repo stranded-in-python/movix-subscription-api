@@ -127,6 +127,7 @@ class ErrorModel(BaseModel):
 
 class ErrorCode(str, Enum):
     ACCOUNT_NOT_EXISTS = "ACCOUNT_NOT_EXISTS"
+    TARIFF_NOT_EXISTS = "TARIFF_NOT_EXISTS"
 
 
 # endregion Errors

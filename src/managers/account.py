@@ -1,5 +1,6 @@
 import typing as t
 import uuid
+from datetime import datetime, timedelta
 
 from fastapi import Depends, Request
 
@@ -7,7 +8,7 @@ import core.exceptions as exc
 from core.pagination import PaginateQueryParams
 from db.account import SAAccountDB, get_account_db
 from db.account_status import SAAccountStatusDB, get_account_status_db
-from models import Account, AccountStatus, SubscriptionStatus
+from models import Account, AccountStatus, SubscriptionStatus, Tariff
 
 
 class AccountManager:
@@ -83,6 +84,18 @@ class AccountManager:
         self, object_: Account, request: Request | None = None
     ) -> None:
         ...
+
+    async def calculate_expires_at(
+        self, object_: Account, tariff: Tariff, status: SubscriptionStatus
+    ) -> datetime:
+        expires_at: datetime
+
+        if status == SubscriptionStatus.active:
+            expires_at = object_.expires_at + timedelta(seconds=tariff.duration)
+        else:
+            expires_at = datetime.now() + timedelta(seconds=tariff.duration)
+
+        return expires_at
 
 
 async def get_account_manager(

@@ -66,7 +66,7 @@ async def create_invoice(
 
     invoice_create = models.InvoiceCreate(
         user_id=account.id,
-        service_id=account.subscription_id,
+        service_id=account.tariff_id,
         amount=tariff.amount,
         currency=tariff.currency,
     )
