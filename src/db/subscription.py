@@ -2,22 +2,12 @@ import typing as t
 import uuid
 
 from fastapi import Depends
-from sqlalchemy import Boolean, Select, String, select
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import mapped_column
 
 import models
 from core.pagination import PaginateQueryParams
-from db.base import SQLAlchemyBase, get_async_session
-
-
-class SASubscription(SQLAlchemyBase):
-    id = mapped_column("id", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = mapped_column("name", String(255), nullable=False)
-    on_delete = mapped_column("on_delete", Boolean, nullable=False, default=False)
-
-    __tablename__ = "subscription"
+from db.base import SASubscription, get_async_session
 
 
 class SASubscriptionDB:

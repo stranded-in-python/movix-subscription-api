@@ -2,33 +2,12 @@ import typing as t
 import uuid
 
 from fastapi import Depends
-from sqlalchemy import (
-    DateTime,
-    ForeignKey,
-    Integer,
-    MetaData,
-    Numeric,
-    Select,
-    String,
-    select,
-)
-from sqlalchemy.dialects.postgresql import TEXT, UUID
+from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import mapped_column
 
 import models
 from core.pagination import PaginateQueryParams
-from db.base import SQLAlchemyBase, get_async_session
-
-
-class SAAccountStatus(SQLAlchemyBase):
-    id = mapped_column("id", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    account_id = mapped_column("account", ForeignKey("account.id"))
-    created_at = mapped_column("created_at", DateTime)
-    expires_at = mapped_column("expires_at", DateTime)
-    status = mapped_column("status", String(255))
-
-    __tablename__ = "account_status"
+from db.base import SAAccountStatus, get_async_session
 
 
 class SAAccountStatusDB:

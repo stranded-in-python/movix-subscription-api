@@ -3,40 +3,13 @@ import uuid
 from datetime import datetime
 
 from fastapi import Depends
-from sqlalchemy import (
-    Boolean,
-    DateTime,
-    ForeignKey,
-    Integer,
-    MetaData,
-    Numeric,
-    Select,
-    String,
-    select,
-)
-from sqlalchemy.dialects.postgresql import TEXT, UUID
+from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import mapped_column
 
 import core.exceptions as exc
 import models
 from core.pagination import PaginateQueryParams
-from db.base import SQLAlchemyBase, get_async_session
-
-
-class AccountDB(SQLAlchemyBase):
-    id = mapped_column("id", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = mapped_column("created_at", DateTime, default=datetime.utcnow)
-    modified_at = mapped_column("modified_at", DateTime, default=datetime.utcnow)
-    user_id = mapped_column("user", UUID(as_uuid=True))
-    subscription_id = mapped_column("subscription", ForeignKey("subscription.id"))
-    tariff = mapped_column("tariff", ForeignKey("tariff.id"), nullable=True)
-    expires_at = mapped_column("expires_at", DateTime, nullable=True)
-    invoice_id = mapped_column("invoice", UUID(as_uuid=True), nullable=True)
-    status = mapped_column("status", String(255))
-    on_delete = mapped_column("on_delete", Boolean, nullable=False, default=False)
-
-    __tablename__ = "account"
+from db.base import AccountDB, get_async_session
 
 
 class SAAccountDB:

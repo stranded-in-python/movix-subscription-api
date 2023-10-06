@@ -36,7 +36,7 @@ def get_url():
     user = os.getenv("PGUSER", "yamp_dummy")
     password = os.getenv("PGPASSWORD", "qweasd123")
     host = os.getenv("PGHOST", "localhost")
-    port = os.getenv("PGPORT", "5434")
+    port = os.getenv("PGPORT", "5432")
     db = os.getenv("PGDB", "yamp_movies_db")
 
     return f"{database_adapter}:" f"//{user}:{password}" f"@{host}:{port}/{db}"
