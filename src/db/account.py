@@ -1,8 +1,10 @@
 import typing as t
 import uuid
+from datetime import datetime
 
 from fastapi import Depends
 from sqlalchemy import (
+    Boolean,
     DateTime,
     ForeignKey,
     Integer,
@@ -16,6 +18,7 @@ from sqlalchemy.dialects.postgresql import TEXT, UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import mapped_column
 
+import core.exceptions as exc
 import models
 from core.pagination import PaginateQueryParams
 from db.base import SQLAlchemyBase, get_async_session
@@ -23,9 +26,13 @@ from db.base import SQLAlchemyBase, get_async_session
 
 class AccountDB(SQLAlchemyBase):
     id = mapped_column("id", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = mapped_column("created_at", DateTime)
+    created_at = mapped_column("created_at", DateTime, default=datetime.utcnow)
+    modified_at = mapped_column("modified_at", DateTime, default=datetime.utcnow)
+    expires_at = mapped_column("expires_at", DateTime, nullable=True)
     subscription_id = mapped_column("subscription", ForeignKey("subscription.id"))
     user_id = mapped_column("user", UUID(as_uuid=True))
+    status = mapped_column("status", String(255))
+    on_delete = mapped_column("on_delete", Boolean, nullable=False, default=False)
 
     __tablename__ = "account"
 
@@ -46,9 +53,7 @@ class SAAccountDB:
             return None
         return self.model_manager.model_validate(object_)
 
-    async def get_by_user_id(
-        self, user_id: uuid.UUID
-    ) -> t.Iterable[models.Account] | None:
+    async def get_by_user_id(self, user_id: uuid.UUID) -> t.Iterable[models.Account]:
         """Get an accounts by user id."""
         objects = await self._get_objects_by_user_id(user_id)
         if not objects:
@@ -66,10 +71,15 @@ class SAAccountDB:
         self, object_: models.Account, update_dict: dict[str, t.Any]
     ) -> models.Account:
         """Update an account."""
-        _object = self._get_object_by_id(object_.id)
+        _object = await self._get_object_by_id(object_.id)
+
+        if _object is None:
+            raise exc.ObjectNotExists
 
         for key, value in update_dict.items():
             setattr(_object, key, value)
+        _object.modified_at = datetime.utcnow()
+
         self.session.add(_object)
         await self.session.commit()
         await self.session.refresh(_object)

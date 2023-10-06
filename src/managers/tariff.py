@@ -21,12 +21,10 @@ class TariffManager:
         await self.on_after_create(created_role, request)
         return created_role
 
-    async def get(self, tariff_id: uuid.UUID) -> Tariff:
-        model = await self.tariff_db.get_by_id(tariff_id)
+    async def get(self, tariff_id: uuid.UUID) -> Tariff | None:
+        object = await self.tariff_db.get_by_id(tariff_id)
 
-        if model is None:
-            raise exc.ObjectNotExists()
-        return model
+        return object
 
     async def update(
         self,
@@ -48,11 +46,9 @@ class TariffManager:
 
         return model
 
-    async def get_by_subscription(self, sub_id: uuid.UUID):
+    async def get_by_subscription(self, sub_id: uuid.UUID) -> Tariff | None:
         model = await self.tariff_db.get_by_subscription(sub_id)
 
-        if model is None:
-            raise exc.ObjectNotExists()
         return model
 
     async def search(

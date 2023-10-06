@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     access_token_secret: SecretStr = SecretStr('access_token')
     refresh_token_secret: SecretStr = SecretStr('refresh_token')
 
+    permissions_superuser: str = '00000000-0000-0000-0000-000000000001'
+
+    url_create_invoice: str = "http://localhost:8080/api/v1/payments/invoice"
+
 
 def get_database_url_async() -> str:
     return (

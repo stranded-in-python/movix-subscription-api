@@ -11,6 +11,8 @@ class Account(BaseModel):
     created_at: datetime
     subscription_id: UUID
     user_id: UUID
+    status: models.SubscriptionStatus
+    expires_at: datetime
 
 
 class AccountStatus(BaseModel):

@@ -4,7 +4,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 import api.schema as schema
+import core.exceptions as exc
 from managers.tariff import TariffManager, get_tariff_manager
+from src.auth.users import get_current_superuser
 
 router = APIRouter()
 router.prefix = "/tariffs"
@@ -20,16 +22,20 @@ async def get_tariff_by_subscription(
     date: datetime,
     tariff_manager: TariffManager = Depends(get_tariff_manager),
 ) -> schema.TariffRead:
-    model = await tariff_manager.get_by_subscription(subscription_id)
-    return schema.TariffRead.model_validate(model)
+    object = await tariff_manager.get_by_subscription(subscription_id)
+    return schema.TariffRead.model_validate(object)
 
 
 @router.get("", summary="Get tariff", description="Get tariff by id")
 async def get_tariff(
-    tariff_id: UUID, tariff_manager: TariffManager = Depends(get_tariff_manager)
+    tariff_id: UUID,
+    tariff_manager: TariffManager = Depends(get_tariff_manager),
+    user=Depends(get_current_superuser),
 ) -> schema.TariffRead:
-    model = await tariff_manager.get(tariff_id)
-    return schema.TariffRead.model_validate(model)
+    object = await tariff_manager.get(tariff_id)
+    if object is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=exc.ObjectNotExists)
+    return schema.TariffRead.model_validate(object)
 
 
 @router.post(
@@ -46,9 +52,10 @@ async def create_tariff(
     request: Request,
     tariff_create: schema.TariffCreate,
     tariff_manager: TariffManager = Depends(get_tariff_manager),
+    user=Depends(get_current_superuser),
 ) -> schema.TariffRead:
-    model = await tariff_manager.create(tariff_create.model_dump(), request=request)
-    return schema.TariffRead.model_validate(model)
+    object = await tariff_manager.create(tariff_create.model_dump(), request=request)
+    return schema.TariffRead.model_validate(object)
 
 
 @router.put(
@@ -66,14 +73,18 @@ async def update_tariff(
     request: Request,
     tariff_update: schema.TariffUpdate,
     tariff_manager: TariffManager = Depends(get_tariff_manager),
+    user=Depends(get_current_superuser),
 ) -> schema.TariffRead:
-    model = await tariff_manager.get(tariff_update.id)
+    object = await tariff_manager.get(tariff_update.id)
 
-    model = await tariff_manager.update(
-        tariff_update.model_dump(), model, request=request
+    if object is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=exc.ObjectNotExists)
+
+    object = await tariff_manager.update(
+        tariff_update.model_dump(), object, request=request
     )
 
-    return schema.TariffRead.model_validate(model)
+    return schema.TariffRead.model_validate(object)
 
 
 @router.delete(
@@ -91,9 +102,13 @@ async def delete_tariff(
     request: Request,
     tariff_id: UUID,
     tariff_manager: TariffManager = Depends(get_tariff_manager),
+    user=Depends(get_current_superuser),
 ) -> schema.TariffRead:
-    model = await tariff_manager.get(tariff_id)
+    object = await tariff_manager.get(tariff_id)
 
-    model = await tariff_manager.delete(model, request=request)
+    if object is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=exc.ObjectNotExists)
 
-    return schema.TariffRead.model_validate(model)
+    object = await tariff_manager.delete(object, request=request)
+
+    return schema.TariffRead.model_validate(object)

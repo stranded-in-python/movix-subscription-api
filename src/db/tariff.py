@@ -1,5 +1,6 @@
 import typing as t
 import uuid
+from datetime import datetime
 
 from fastapi import Depends
 from sqlalchemy import (
@@ -24,10 +25,10 @@ from db.base import SQLAlchemyBase, get_async_session
 class SATariff(SQLAlchemyBase):
     id = mapped_column("id", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     subscription_id = mapped_column("subscription", ForeignKey("subscription.id"))
-    created_at = mapped_column("created_at", DateTime)
-    expires_at = mapped_column("expires_at", DateTime)
-    amount = mapped_column("amount", Numeric(14, 2))
-    currency = mapped_column("currency", String(3))
+    created_at = mapped_column("created_at", DateTime, default=datetime.utcnow)
+    expires_at = mapped_column("expires_at", DateTime, nullable=True)
+    amount = mapped_column("amount", Numeric(14, 2), nullable=False)
+    currency = mapped_column("currency", String(3), nullable=False)
 
     __tablename__ = "tariff"
 

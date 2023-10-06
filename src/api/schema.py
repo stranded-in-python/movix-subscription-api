@@ -26,6 +26,7 @@ class SubscriptionCreate(SubscriptionBase):
 
 class SubscriptionRead(SubscriptionBase):
     id: UUID
+    name: str
 
 
 class SubscriptionUpdate(SubscriptionRead):
