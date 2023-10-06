@@ -21,31 +21,3 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 class SQLAlchemyBase(DeclarativeBase):
     metadata = metadata_obj
-
-
-class SubscriptionDB(SQLAlchemyBase):
-    id = mapped_column("id", UUID(as_uuid=True), primary_key=True, default=uuid4)
-    name = mapped_column("name", String(255), nullable=False)
-
-    __tablename__ = "subscription"
-
-
-class AccountDB(SQLAlchemyBase):
-    id = mapped_column("id", UUID(as_uuid=True), primary_key=True, default=uuid4)
-    created_at = mapped_column("created_at", DateTime)
-    subscription_id = mapped_column("subscription", ForeignKey("subscription.id"))
-    user_id = mapped_column("user", UUID(as_uuid=True))
-
-    __tablename__ = "account"
-
-
-class AccountStatusDB(SQLAlchemyBase):
-    id = mapped_column("id", UUID(as_uuid=True), primary_key=True, default=uuid4)
-    account_id = mapped_column(
-        "account", ForeignKey("account.id")
-    )  # uuid REFERENCES subscriptions.account(id),
-    created_at = mapped_column("created_at", DateTime)
-    expires_at = mapped_column("expires_at", DateTime)
-    status = mapped_column("status", String(255))
-
-    __tablename__ = "account_status"

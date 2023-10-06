@@ -12,7 +12,7 @@ from sqlalchemy import (
     String,
     select,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import TEXT, UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import mapped_column
 
@@ -21,51 +21,52 @@ from core.pagination import PaginateQueryParams
 from db.base import SQLAlchemyBase, get_async_session
 
 
-class SATariff(SQLAlchemyBase):
+class SAAccountStatus(SQLAlchemyBase):
     id = mapped_column("id", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    subscription_id = mapped_column("subscription", ForeignKey("subscription.id"))
+    account_id = mapped_column("account", ForeignKey("account.id"))
     created_at = mapped_column("created_at", DateTime)
     expires_at = mapped_column("expires_at", DateTime)
-    amount = mapped_column("amount", Numeric(14, 2))
-    currency = mapped_column("currency", String(3))
+    status = mapped_column("status", String(255))
 
-    __tablename__ = "tariff"
+    __tablename__ = "account_status"
 
 
-class SATariffDB:
+class SAAccountStatusDB:
     session: AsyncSession
-    table: SATariff
+    table: SAAccountStatus
 
-    def __init__(self, session: AsyncSession, table: SATariff):
+    def __init__(self, session: AsyncSession, table: SAAccountStatus):
         self.session = session
         self.table = table
-        self.model_manager = models.Tariff
+        self.model_manager = models.AccountStatus
 
-    async def get_by_id(self, id_: uuid.UUID) -> models.Tariff | None:
-        """Get a tariff by id."""
+    async def get_by_id(self, id_: uuid.UUID) -> models.AccountStatus | None:
+        """Get an account status by id."""
         object_ = await self._get_object_by_id(id_)
         if not object_:
             return None
         return self.model_manager.model_validate(object_)
 
-    async def get_by_subscription(self, id_: uuid.UUID) -> models.Tariff | None:
-        """Get a tariff by subscription id."""
-        object_ = await self._get_object_by_subscription_id(id_)
-        if not object_:
+    async def get_by_account(
+        self, id_: uuid.UUID
+    ) -> t.Iterable[models.AccountStatus] | None:
+        """Get an account status by subscription id."""
+        objects = await self._get_objects_by_account_id(id_)
+        if not objects:
             return None
-        return self.model_manager.model_validate(object_)
+        return [self.model_manager.model_validate(object_) for object_ in objects]
 
-    async def create(self, create_dict: dict[str, t.Any]) -> models.Tariff:
-        """Create a tariff."""
+    async def create(self, create_dict: dict[str, t.Any]) -> models.AccountStatus:
+        """Create an account status."""
         object_ = self.table(**create_dict)  # type: ignore
         self.session.add(object_)
         await self.session.commit()
         return self.model_manager.model_validate(object_)
 
     async def update(
-        self, object_: models.Tariff, update_dict: dict[str, t.Any]
-    ) -> models.Tariff:
-        """Update a tariff."""
+        self, object_: models.AccountStatus, update_dict: dict[str, t.Any]
+    ) -> models.AccountStatus:
+        """Update an account status."""
         _object = self._get_object_by_id(object_.id)
 
         for key, value in update_dict.items():
@@ -77,7 +78,7 @@ class SATariffDB:
         return self.model_manager.model_validate(_object)
 
     async def delete(self, id_: uuid.UUID) -> None:
-        """Delete a tariff."""
+        """Delete an account status."""
         statement = select(self.table).where(self.table.id == id_)
         object_ = await self._get_object(statement)
         await self.session.delete(object_)
@@ -85,7 +86,7 @@ class SATariffDB:
 
     async def search(
         self, pagination_params: PaginateQueryParams, filter_param: str | None = None
-    ) -> t.Iterable[models.Tariff]:
+    ) -> t.Iterable[models.AccountStatus]:
         """Search tariffs."""
         statement = select(self.table)
         if filter_param:
@@ -103,18 +104,28 @@ class SATariffDB:
             for result in results.fetchall()
         )
 
-    async def _get_object_by_id(self, id_: uuid.UUID) -> SATariff | None:
-        statement = select(self.table).where(self.table.id == id_)
-        return await self._get_object(statement)
-
-    async def _get_object(self, statement: Select[tuple[SATariff]]) -> SATariff | None:
+    async def _get_object(
+        self, statement: Select[tuple[SAAccountStatus]]
+    ) -> SAAccountStatus | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
-    async def _get_object_by_subscription_id(self, id_: uuid.UUID) -> SATariff | None:
-        statement = select(self.table).where(self.table.subscription_id == id_)
+    async def _get_objects(
+        self, statement: Select[tuple[SAAccountStatus]]
+    ) -> t.Iterable[SAAccountStatus] | None:
+        results = await self.session.execute(statement)
+        return results.unique().scalars().fetchall()
+
+    async def _get_object_by_id(self, id_: uuid.UUID) -> SAAccountStatus | None:
+        statement = select(self.table).where(self.table.id == id_)
         return await self._get_object(statement)
 
+    async def _get_objects_by_account_id(
+        self, id_: uuid.UUID
+    ) -> t.Iterable[SAAccountStatus] | None:
+        statement = select(self.table).where(self.table.account_id == id_)
+        return await self._get_objects(statement)
 
-async def get_tariff_db(session: AsyncSession = Depends(get_async_session)):
-    yield SATariffDB(session, SATariff)  # type: ignore
+
+async def get_account_status_db(session: AsyncSession = Depends(get_async_session)):
+    yield SAAccountStatusDB(session, SAAccountStatus)  # type: ignore

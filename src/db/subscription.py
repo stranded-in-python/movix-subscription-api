@@ -2,16 +2,7 @@ import typing as t
 import uuid
 
 from fastapi import Depends
-from sqlalchemy import (
-    DateTime,
-    ForeignKey,
-    Integer,
-    MetaData,
-    Numeric,
-    Select,
-    String,
-    select,
-)
+from sqlalchemy import Select, String, select
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import mapped_column
@@ -21,51 +12,47 @@ from core.pagination import PaginateQueryParams
 from db.base import SQLAlchemyBase, get_async_session
 
 
-class SATariff(SQLAlchemyBase):
+class SASubscription(SQLAlchemyBase):
     id = mapped_column("id", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    subscription_id = mapped_column("subscription", ForeignKey("subscription.id"))
-    created_at = mapped_column("created_at", DateTime)
-    expires_at = mapped_column("expires_at", DateTime)
-    amount = mapped_column("amount", Numeric(14, 2))
-    currency = mapped_column("currency", String(3))
+    name = mapped_column("name", String(255), nullable=False)
 
-    __tablename__ = "tariff"
+    __tablename__ = "subscription"
 
 
-class SATariffDB:
+class SASubscriptionDB:
     session: AsyncSession
-    table: SATariff
+    table: SASubscription
 
-    def __init__(self, session: AsyncSession, table: SATariff):
+    def __init__(self, session: AsyncSession, table: SASubscription):
         self.session = session
         self.table = table
-        self.model_manager = models.Tariff
+        self.model_manager = models.Subscription
 
-    async def get_by_id(self, id_: uuid.UUID) -> models.Tariff | None:
-        """Get a tariff by id."""
+    async def get_by_id(self, id_: uuid.UUID) -> models.Subscription | None:
+        """Get a subscription by id."""
         object_ = await self._get_object_by_id(id_)
         if not object_:
             return None
         return self.model_manager.model_validate(object_)
 
-    async def get_by_subscription(self, id_: uuid.UUID) -> models.Tariff | None:
-        """Get a tariff by subscription id."""
-        object_ = await self._get_object_by_subscription_id(id_)
+    async def get_by_name(self, name: str) -> models.Subscription | None:
+        """Get a subscription by id."""
+        object_ = await self._get_object_by_name(name)
         if not object_:
             return None
         return self.model_manager.model_validate(object_)
 
-    async def create(self, create_dict: dict[str, t.Any]) -> models.Tariff:
-        """Create a tariff."""
+    async def create(self, create_dict: dict[str, t.Any]) -> models.Subscription:
+        """Create a subscription."""
         object_ = self.table(**create_dict)  # type: ignore
         self.session.add(object_)
         await self.session.commit()
         return self.model_manager.model_validate(object_)
 
     async def update(
-        self, object_: models.Tariff, update_dict: dict[str, t.Any]
-    ) -> models.Tariff:
-        """Update a tariff."""
+        self, object_: models.Subscription, update_dict: dict[str, t.Any]
+    ) -> models.Subscription:
+        """Update a subscription."""
         _object = self._get_object_by_id(object_.id)
 
         for key, value in update_dict.items():
@@ -77,7 +64,7 @@ class SATariffDB:
         return self.model_manager.model_validate(_object)
 
     async def delete(self, id_: uuid.UUID) -> None:
-        """Delete a tariff."""
+        """Delete a subscription."""
         statement = select(self.table).where(self.table.id == id_)
         object_ = await self._get_object(statement)
         await self.session.delete(object_)
@@ -85,11 +72,11 @@ class SATariffDB:
 
     async def search(
         self, pagination_params: PaginateQueryParams, filter_param: str | None = None
-    ) -> t.Iterable[models.Tariff]:
-        """Search tariffs."""
+    ) -> t.Iterable[models.Subscription]:
+        """Search subscriptions."""
         statement = select(self.table)
         if filter_param:
-            statement.where(self.table.id == filter_param)
+            statement.where(self.table.name == filter_param)
 
         statement.limit(pagination_params.page_size)
         statement.offset(
@@ -103,18 +90,20 @@ class SATariffDB:
             for result in results.fetchall()
         )
 
-    async def _get_object_by_id(self, id_: uuid.UUID) -> SATariff | None:
-        statement = select(self.table).where(self.table.id == id_)
+    async def _get_object_by_id(self, object_id: uuid.UUID) -> SASubscription | None:
+        statement = select(self.table).where(self.table.id == object_id)
         return await self._get_object(statement)
 
-    async def _get_object(self, statement: Select[tuple[SATariff]]) -> SATariff | None:
+    async def _get_object(
+        self, statement: Select[tuple[SASubscription]]
+    ) -> SASubscription | None:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
 
-    async def _get_object_by_subscription_id(self, id_: uuid.UUID) -> SATariff | None:
-        statement = select(self.table).where(self.table.subscription_id == id_)
+    async def _get_object_by_name(self, name: str) -> SASubscription | None:
+        statement = select(self.table).where(self.table.name == name)
         return await self._get_object(statement)
 
 
-async def get_tariff_db(session: AsyncSession = Depends(get_async_session)):
-    yield SATariffDB(session, SATariff)  # type: ignore
+async def get_subscription_db(session: AsyncSession = Depends(get_async_session)):
+    yield SASubscriptionDB(session, SASubscription)  # type: ignore
