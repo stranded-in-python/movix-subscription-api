@@ -28,9 +28,11 @@ class AccountDB(SQLAlchemyBase):
     id = mapped_column("id", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     created_at = mapped_column("created_at", DateTime, default=datetime.utcnow)
     modified_at = mapped_column("modified_at", DateTime, default=datetime.utcnow)
-    expires_at = mapped_column("expires_at", DateTime, nullable=True)
-    subscription_id = mapped_column("subscription", ForeignKey("subscription.id"))
     user_id = mapped_column("user", UUID(as_uuid=True))
+    subscription_id = mapped_column("subscription", ForeignKey("subscription.id"))
+    tariff = mapped_column("tariff", ForeignKey("tariff.id"), nullable=True)
+    expires_at = mapped_column("expires_at", DateTime, nullable=True)
+    invoice_id = mapped_column("invoice", UUID(as_uuid=True), nullable=True)
     status = mapped_column("status", String(255))
     on_delete = mapped_column("on_delete", Boolean, nullable=False, default=False)
 

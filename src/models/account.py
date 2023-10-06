@@ -12,6 +12,7 @@ class Account(BaseModel):
     subscription_id: UUID
     user_id: UUID
     status: models.SubscriptionStatus
+    invoice_id: UUID | None
     expires_at: datetime
 
 

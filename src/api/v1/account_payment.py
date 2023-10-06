@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 import api.schema as schema
 import models as models
@@ -76,29 +76,27 @@ async def create_invoice(
 
 
 @router.post(
-    "/{account_id}/refund/{invoice_id}",
+    "/{account_id}/refund",
     summary="Create refund account payment",
     description="Create subscription account payment by id",
 )
 async def create_refund(
     account_id: UUID,
-    invoice_id: UUID,
     account_manager: AccountManager = Depends(get_account_manager),
     billing_manager: BillingManager = Depends(get_billing_manager),
     user=Depends(get_current_user),
-) -> schema.InvoiceRead:
+) -> Response(status_code=status.HTTP_202_ACCEPTED):
     account = await account_manager.get(account_id)
     if account is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="account not found")
     if account.user_id != user.id:
         raise HTTPException(status.HTTP_403_FORBIDDEN)
+    if account.status != models.SubscriptionStatus.active:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="account not active")
 
-    invoice = await billing_manager.get_ivoice(invoice_id)
-    if invoice is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="invoice not found")
-    if invoice.user_id != account_id.id:
-        raise HTTPException(status.HTTP_403_FORBIDDEN)
+    if account.invoice_id is None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="no invoice")
 
-    invoice = await billing_manager.create_refund(invoice)
+    await billing_manager.create_refund(account.invoice_id)
 
-    return invoice
+    return Response(status_code=status.HTTP_202_ACCEPTED)

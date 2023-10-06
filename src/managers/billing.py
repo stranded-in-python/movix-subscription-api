@@ -24,7 +24,7 @@ class BillingManager:
         invoice = await self._create_invoice(body, settings.url_create_invoice)
         return models.InvoiceRead.model_validate_json(invoice)
 
-    async def create_refund(self, invoice: dict[str, t.Any]) -> models.InvoiceRead:
+    async def create_refund(self, invoice_id) -> models.InvoiceRead:
         ...
 
     @backoff.on_exception(backoff.expo, httpx.RequestError, max_tries=5)

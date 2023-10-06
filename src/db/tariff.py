@@ -29,6 +29,7 @@ class SATariff(SQLAlchemyBase):
     expires_at = mapped_column("expires_at", DateTime, nullable=True)
     amount = mapped_column("amount", Numeric(14, 2), nullable=False)
     currency = mapped_column("currency", String(3), nullable=False)
+    duration = mapped_column("duration", Integer, nullable=False)
 
     __tablename__ = "tariff"
 

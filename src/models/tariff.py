@@ -14,3 +14,4 @@ class Tariff(BaseModel):
     expires_at: datetime
     amount: Decimal
     currency: Currency
+    duration: int
